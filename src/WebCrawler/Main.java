@@ -6,7 +6,14 @@ package WebCrawler;
 
 public class Main {
     public static void main(String[] args){
-        System.out.println("Crawler");
+        try{
+            HTMLFetcher htmlFetcher = new HTMLFetcher("https://www.twitter.com");
+            System.out.println(htmlFetcher.fetchDocument());
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
     }
 }
 
