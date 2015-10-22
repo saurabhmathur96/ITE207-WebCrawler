@@ -1,7 +1,10 @@
-package ite207;
+ package ite207;
 
+import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
-
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
@@ -9,9 +12,55 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class App
 {
-    public static synchronized void main( String[] args )
+    public static void main( String[] args ) throws InterruptedException
     {
-        System.out.println( "Hello World!" );
+        Storage db = new Storage( "mongodb://localhost:27017", "crawler", "urls");
+
+/*        URLData urlData = new URLData( "aurl", Arrays.asList( "a", "b", "c" ) );
+        db.save( urlData );
+        db.close( );
+
+*/
+
+        BlockingQueue<Runnable> runnables = new ArrayBlockingQueue<Runnable>(1024);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(8, 16, 60, TimeUnit.SECONDS, runnables);
+
+
+        BlockingQueue<String> urlQueue = new ArrayBlockingQueue<String>(100);
+        String url = "https://www.reddit.com";
+
+        //Thread r = new CrawlTask( url, executor, db, urlQueue );
+        executor.submit( new CrawlTask( url, executor, db, urlQueue ) );
+
+        //new CrawlTask( url, executor, db, urlQueue ).run();
+        try{
+
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+
+            for (int i=0; i<10;i++ ) {
+
+              executor.submit( new CrawlTask( urlQueue.take(), executor, db, urlQueue ) );
+            }
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+            for (int i=0; i<10;i++ ) {
+
+              executor.submit( new CrawlTask( urlQueue.take(), executor, db, urlQueue ) );
+            }
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+            executor.shutdown();
+        }
+        catch( Exception e )
+        {
+
+        }
+        finally
+        {
+             System.out.println(urlQueue);
+            db.close();
+        }
+
+
+        /*
         String url = "https://www.reddit.com";
         ArrayBlockingQueue<String> queue= new ArrayBlockingQueue<String>( 1000 );
         //queue.add( url );
@@ -60,5 +109,6 @@ public class App
         }
 
         System.out.println( queue );
+        */
     }
 }

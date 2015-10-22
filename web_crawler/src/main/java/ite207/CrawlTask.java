@@ -12,8 +12,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
-import java.util.concurrent.ArrayBlockingQueue;
+
+
 
 /**
  * Crawl Task
@@ -21,17 +27,31 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class CrawlTask extends Thread
 {
-    private String urlToCrawl = null;
-    private ArrayBlockingQueue<String> urlQueue;
-    public CrawlTask(String url, ArrayBlockingQueue<String> queue)
+    static int calls = 0;
+    private final String urlToCrawl;
+    private ThreadPoolExecutor executor;
+    private Storage db;
+    private BlockingQueue<String> urlQueue;
+    public CrawlTask(String url, ThreadPoolExecutor executor, Storage db, BlockingQueue<String> urlQueue)
     {
         this.urlToCrawl = url;
-        this.urlQueue = queue;
+        this.executor = executor;
+        this.db = db;
+        this.urlQueue = urlQueue;
     }
 
     @Override
     public void run()
     {
+        /*synchronized (this){
+          calls++;
+          System.out.println("calls="+calls);
+          if(calls > 10){
+            return;
+          }
+        }*/
+
+
         try
         {
             crawl();
@@ -48,20 +68,34 @@ public class CrawlTask extends Thread
 
     public void crawl() throws IOException, MalformedURLException
     {
-        URL url = new URL(this.urlToCrawl);
+        System.out.println("\""+urlToCrawl+"\"");
 
+        URL url = new URL(this.urlToCrawl);
+        List<String> links = new ArrayList<String>();
         URLConnection urlConnection = url.openConnection();
         try( InputStream input = urlConnection.getInputStream() )
         {
             Document document = Jsoup.parse(input, "UTF-8", "");
+            //System.out.println(document);
             Elements anchorTags = document.select("a");
             for( Element tag : anchorTags )
             {
-                //System.out.println(tag.attr("href"));
-                urlQueue.offer( tag.attr("abs:href") );
+              //System.out.println(tag);
+                //System.out.println(tag.attr("abs:href"));
+                if( tag.attr("abs:href").length() > 2 )
+                {
+                    urlQueue.offer( tag.attr("abs:href") );
+                    String link = tag.attr("abs:href");
+                    links.add( link );
+                    //executor.submit( new CrawlTask( link, executor, db, urlQueue ) );
+                }
+
+
             }
+            //Storage db = new Storage( "mongodb://localhost:27017", "crawler", "urls");
+            db.save( new URLData( urlToCrawl, links ) );
+            //db.close();
+            //System.out.println(urlQueue);
         }
-
-
     }
 }
