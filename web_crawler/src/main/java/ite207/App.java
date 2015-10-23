@@ -1,52 +1,86 @@
  package ite207;
 
+
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.Scanner;
 
+import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 /**
- * Hello world!
+ * Main App Class
  *
  */
 public class App
 {
     public static void main( String[] args ) throws InterruptedException
     {
-        Storage db = new Storage( "mongodb://localhost:27017", "crawler", "urls");
 
-/*        URLData urlData = new URLData( "aurl", Arrays.asList( "a", "b", "c" ) );
-        db.save( urlData );
-        db.close( );
+        String mongouri = "";
+        int maxMinutes = 0;
+        int nIters = 0 ;
+        List<String> seeds = null;
+        int corePoolSize = 0;
+        int maxPoolSize = 0;
+        int keepAliveTime = 0;
+        if( args.length != 1 )
+        {
+            System.out.println( "Please specify config file" );
+            System.exit( 0 );
+        }
+        try
+        {
+            XMLConfiguration config = new XMLConfiguration( args[0] );
+            mongouri = config.getString( "MongoURI" );
+            maxMinutes = config.getInt( "MaxTimeInMinutes" );
+            nIters = config.getInt( "NIters" );
+            seeds = config.getList( "SeedURLs" );
+            corePoolSize = config.getInt( "CorePoolSize" );
+            maxPoolSize = config.getInt( "MaxPoolSize" );
+            keepAliveTime = config.getInt( "KeepAliveTimeMS" );
 
-*/
+        }
+        catch(ConfigurationException cex)
+        {
+            System.out.println( "Config file not found" );
+            System.exit( 0 );
+        }
+
+
+
 
         BlockingQueue<Runnable> runnables = new ArrayBlockingQueue<Runnable>(1024);
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(8, 16, 60, TimeUnit.SECONDS, runnables);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTime, TimeUnit.MILLISECONDS, runnables);
 
 
-        BlockingQueue<String> urlQueue = new ArrayBlockingQueue<String>(100);
-        String url = "https://www.reddit.com";
+        BlockingQueue<String> urlQueue = new ArrayBlockingQueue<String>(1024);
 
-        //Thread r = new CrawlTask( url, executor, db, urlQueue );
-        executor.submit( new CrawlTask( url, executor, db, urlQueue ) );
 
-        //new CrawlTask( url, executor, db, urlQueue ).run();
+
+        for( String seed:seeds )
+        {
+            urlQueue.offer( seed );
+        }
+
+        Storage db = new Storage( mongouri, "crawler", "urls" );
+
         try{
 
-            executor.awaitTermination(1, TimeUnit.MINUTES);
 
-            for (int i=0; i<10;i++ ) {
 
-              executor.submit( new CrawlTask( urlQueue.take(), executor, db, urlQueue ) );
+            for (int i=0; i<nIters;i++ )
+            {
+                executor.submit( new CrawlTask( urlQueue.take(), executor, db, urlQueue ) );
             }
-            executor.awaitTermination(1, TimeUnit.MINUTES);
-            for (int i=0; i<10;i++ ) {
-
-              executor.submit( new CrawlTask( urlQueue.take(), executor, db, urlQueue ) );
-            }
-            executor.awaitTermination(1, TimeUnit.MINUTES);
+            executor.awaitTermination(maxMinutes, TimeUnit.MINUTES);
             executor.shutdown();
         }
         catch( Exception e )
@@ -55,60 +89,10 @@ public class App
         }
         finally
         {
-             System.out.println(urlQueue);
             db.close();
         }
 
 
-        /*
-        String url = "https://www.reddit.com";
-        ArrayBlockingQueue<String> queue= new ArrayBlockingQueue<String>( 1000 );
-        //queue.add( url );
-        int nTasks = 5;
-        CrawlTask[] ts = new CrawlTask[nTasks];
 
-        int nIters = 12;
-        while(nIters-->0)
-        {
-            for (int i=0; i<nTasks; i++ )
-            {
-
-                ts[i] = new CrawlTask( url, queue );
-                ts[i].start();
-                System.out.println( "Thread started: "+url );
-
-                try
-                {
-                    url = queue.take();
-                }
-                catch( InterruptedException e )
-                {
-                    System.out.println( "Thread interrupted." );
-                }
-
-
-
-            }
-
-            for (int i=0; i<nTasks; i++ )
-            {
-                try
-                {
-                    ts[i].join();
-                    System.out.println( "Thread Ended: "+i );
-
-                }
-                catch( InterruptedException e )
-                {
-                    System.out.println( "Thread interrupted." );
-                }
-
-
-            }
-
-        }
-
-        System.out.println( queue );
-        */
     }
 }

@@ -13,6 +13,8 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
@@ -71,7 +73,7 @@ public class CrawlTask extends Thread
         System.out.println("\""+urlToCrawl+"\"");
 
         URL url = new URL(this.urlToCrawl);
-        List<String> links = new ArrayList<String>();
+        Set<String> links = new HashSet<String>();
         URLConnection urlConnection = url.openConnection();
         try( InputStream input = urlConnection.getInputStream() )
         {
@@ -82,18 +84,19 @@ public class CrawlTask extends Thread
             {
               //System.out.println(tag);
                 //System.out.println(tag.attr("abs:href"));
-                if( tag.attr("abs:href").length() > 2 )
+                String normalizedURL = NormalizeURL.normalize(tag.attr("abs:href"));
+                if( normalizedURL.length() > 2 )
                 {
-                    urlQueue.offer( tag.attr("abs:href") );
-                    String link = tag.attr("abs:href");
-                    links.add( link );
+                    urlQueue.offer( normalizedURL );
+                    //String link = tag.attr("abs:href");
+                    links.add( normalizedURL );
                     //executor.submit( new CrawlTask( link, executor, db, urlQueue ) );
                 }
 
 
             }
             //Storage db = new Storage( "mongodb://localhost:27017", "crawler", "urls");
-            db.save( new URLData( urlToCrawl, links ) );
+            db.save( new URLData( urlToCrawl, new ArrayList<String>(links) ) );
             //db.close();
             //System.out.println(urlQueue);
         }

@@ -48,15 +48,16 @@ public class Storage
         }
         catch( MongoWriteException e )
         {
+            
             //e.printStackTrace();
         }
         catch( MongoWriteConcernException e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         catch( MongoException e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
 
         /*for (Document doc : collection.find()) {

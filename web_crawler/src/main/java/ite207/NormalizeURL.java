@@ -1,3 +1,4 @@
+package ite207;
 /**
  * - Covert the scheme and host to lowercase (done by java.net.URL)
  * - Normalize the path (done by java.net.URI)

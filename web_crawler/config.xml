@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <MongoURI>mongodb://ite207:webcrawler@ds043324.mongolab.com:43324/crawler</MongoURI>
+  <MaxTimeInMinutes>1</MaxTimeInMinutes>
+  <CorePoolSize>8</CorePoolSize>
+  <MaxPoolSize>16</MaxPoolSize>
+  <KeepAliveTimeMS>5000</KeepAliveTimeMS>
+  <NIters>5</NIters>
+  <SeedURLs>http://stackoverflow.com/,http://www.thehindu.com/,https://www.reddit.com/</SeedURLs>
+</config>

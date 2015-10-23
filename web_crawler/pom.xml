@@ -30,6 +30,42 @@
             <artifactId>lint-maven-plugin</artifactId>
             <version>0.0.8</version>
           </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>2.1</version>
+            <configuration>
+            <archive>
+              <manifest>
+                <addClasspath>true</addClasspath>
+                <mainClass>ite207.App</mainClass>
+              </manifest>
+            </archive>
+          </configuration>
+        </plugin>
+        <plugin>
+<artifactId>maven-assembly-plugin</artifactId>
+<executions>
+  <execution>
+    <phase>package</phase>
+    <goals>
+      <goal>single</goal>
+    </goals>
+  </execution>
+</executions>
+<configuration>
+  <descriptorRefs>
+    <descriptorRef>jar-with-dependencies</descriptorRef>
+  </descriptorRefs>
+  <archive>
+    <manifest>
+      <addClasspath>true</addClasspath>
+      <mainClass>ite207.App</mainClass>
+    </manifest>
+  </archive>
+</configuration>
+</plugin>
       </plugins>
   </build>
 
@@ -45,11 +81,20 @@
        <groupId>org.jsoup</groupId>
        <artifactId>jsoup</artifactId>
        <version>1.8.3</version>
+       <scope>compile</scope>
     </dependency>
+
     <dependency>
        <groupId>org.mongodb</groupId>
        <artifactId>mongo-java-driver</artifactId>
        <version>3.1.0</version>
+       <scope>compile</scope>
+    </dependency>
+    <dependency>
+       <groupId>commons-configuration</groupId>
+       <artifactId>commons-configuration</artifactId>
+       <version>1.6</version>
+       <scope>compile</scope>
     </dependency>
   </dependencies>
 </project>
