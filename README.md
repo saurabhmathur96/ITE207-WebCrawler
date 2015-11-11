@@ -15,4 +15,10 @@ Check Documentation directory for abstract
 
 
 #### To run the app
-     `$ mvn exec:java`
+     `$ mvn exec:java -Dexec.args="config.xml"
+     
+#### config.xml
+    - DB Url
+    - Number of iterations
+    - Seed Urls
+    - Thread Pool Configurations
