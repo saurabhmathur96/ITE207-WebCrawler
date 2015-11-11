@@ -16,6 +16,11 @@ Check Documentation directory for abstract
 
 #### To run the app
      `$ mvn exec:java -Dexec.args="config.xml"
+    
+#### Run from jar 
+      `java -jar web_crawler/target/web_crawler-1.0-SNAPSHOT-jar-with-dependencies.jar web_crawler/config.xml
+
+`
      
 #### config.xml
     - DB Url
